@@ -121,7 +121,10 @@ export async function generate (options: GeneratorOptions) {
     export const ${plural}Router = router({`)
     for (const [opType, opNameWithModel] of Object.entries(operations)) {
       const baseOpType = opType.replace('OrThrow', '')
-
+      if (baseOpType === 'groupBy') {
+        // skip 
+        continue
+      }
       generateProcedure(
         modelRouter,
         opNameWithModel,

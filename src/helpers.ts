@@ -118,7 +118,7 @@ export function generateRouterSchemaImports (
     `import { ${name}UpdateManySchema } from '../schemas/updateMany${name}.schema'`,
     `import { ${name}UpsertSchema } from '../schemas/upsertOne${name}.schema'`,
     `import { ${name}AggregateSchema } from '../schemas/aggregate${name}.schema'`,
-    `import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
+    `//import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
     'import { protectedProcedure } from \'../../trpc\'',
     'import { router } from \'@/server/trpc/trpc\'',
   ])
