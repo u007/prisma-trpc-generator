@@ -6,12 +6,12 @@ export const generateCreateRouterImport = (
   sourceFile: SourceFile,
   isProtectedMiddleware: boolean,
 ) => {
-  sourceFile.addImportDeclaration({
-    moduleSpecifier: './helpers/createRouter',
-    namedImports: [
-      isProtectedMiddleware ? 'createProtectedRouter' : 'createRouter',
-    ],
-  });
+  // sourceFile.addImportDeclaration({
+  //   moduleSpecifier: './helpers/createRouter',
+  //   namedImports: [
+  //     isProtectedMiddleware ? 'createProtectedRouter' : 'createRouter',
+  //   ],
+  // });
 };
 
 export const generatetRPCImport = (sourceFile: SourceFile) => {
@@ -81,15 +81,15 @@ export function generateProcedure(
   baseOpType: string,
 ) {
   sourceFile.addStatements(/* ts */ `
-  .${getProcedureTypeByOpName(baseOpType)}("${name}", {
-    input: ${typeName},
-    async resolve({ ctx, input }) {
-      const ${name} = await ctx.prisma.${uncapitalizeFirstLetter(
-    modelName,
-  )}.${opType.replace('One', '')}(input);
+  '${name}': protectedProcedure.input(${typeName}).${getProcedureTypeByOpName(baseOpType)}(
+    async ({ input, ctx }) => {
+      if (!ctx.isAdmin) {
+        throw new Error('Not allowed')
+      }
+      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       return ${name};
-    },
-  })`);
+    }
+),`);
 }
 
 export function generateRouterSchemaImports(
@@ -99,32 +99,35 @@ export function generateRouterSchemaImports(
   provider: string,
 ) {
   let statements = [
-    `import { ${name}FindUniqueSchema } from "../schemas/findUnique${name}.schema";`,
-    `import { ${name}FindFirstSchema } from "../schemas/findFirst${name}.schema";`,
-    `import { ${name}FindManySchema } from "../schemas/findMany${name}.schema";`,
-    `import { ${name}CreateOneSchema } from "../schemas/createOne${name}.schema";`,
+    `import { ${name}FindUniqueSchema } from '../schemas/findUnique${name}.schema'`,
+    `import { ${name}FindFirstSchema } from '../schemas/findFirst${name}.schema'`,
+    `import { ${name}FindManySchema } from '../schemas/findMany${name}.schema'`,
+    `import { ${name}CreateOneSchema } from '../schemas/createOne${name}.schema'`,
   ];
 
   if (hasCreateMany) {
     statements.push(
-      `import { ${name}CreateManySchema } from "../schemas/createMany${name}.schema";`,
+      `import { ${name}CreateManySchema } from '../schemas/createMany${name}.schema'`,
     );
   }
 
   statements = statements.concat([
-    `import { ${name}DeleteOneSchema } from "../schemas/deleteOne${name}.schema";`,
-    `import { ${name}UpdateOneSchema } from "../schemas/updateOne${name}.schema";`,
-    `import { ${name}DeleteManySchema } from "../schemas/deleteMany${name}.schema";`,
-    `import { ${name}UpdateManySchema } from "../schemas/updateMany${name}.schema";`,
-    `import { ${name}UpsertSchema } from "../schemas/upsertOne${name}.schema";`,
-    `import { ${name}AggregateSchema } from "../schemas/aggregate${name}.schema";`,
-    `import { ${name}GroupBySchema } from "../schemas/groupBy${name}.schema";`,
+    `import { ${name}DeleteOneSchema } from '../schemas/deleteOne${name}.schema'`,
+    `import { ${name}UpdateOneSchema } from '../schemas/updateOne${name}.schema'`,
+    `import { ${name}DeleteManySchema } from '../schemas/deleteMany${name}.schema'`,
+    `import { ${name}UpdateManySchema } from '../schemas/updateMany${name}.schema'`,
+    `import { ${name}UpsertSchema } from '../schemas/upsertOne${name}.schema'`,
+    `import { ${name}AggregateSchema } from '../schemas/aggregate${name}.schema'`,
+    `import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
+    `import { protectedProcedure } from '../../trpc'`,
+    `import { router } from '@/server/trpc/trpc'`,
+    `import prisma from '@/server/lib/prisma'`,
   ]);
 
   if (provider === 'mongodb') {
     statements = statements.concat([
-      `import { ${name}FindRawObjectSchema } from "../schemas/objects/${name}FindRaw.schema";`,
-      `import { ${name}AggregateRawObjectSchema } from "../schemas/objects/${name}AggregateRaw.schema";`,
+      `import { ${name}FindRawObjectSchema } from '../schemas/objects/${name}FindRaw.schema'`,
+      `import { ${name}AggregateRawObjectSchema } from '../schemas/objects/${name}AggregateRaw.schema'`,
     ]);
   }
 

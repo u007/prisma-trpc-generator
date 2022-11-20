@@ -118,7 +118,7 @@ export async function generate(options: GeneratorOptions) {
     );
 
     modelRouter.addStatements(/* ts */ `
-    export const ${plural}Router = createRouter()`);
+    export const ${plural}Router = router({`);
     for (const [opType, opNameWithModel] of Object.entries(operations)) {
       const baseOpType = opType.replace('OrThrow', '');
 
@@ -131,6 +131,8 @@ export async function generate(options: GeneratorOptions) {
         baseOpType,
       );
     }
+    modelRouter.addStatements(/* ts */ `
+    })`);
     modelRouter.formatText({ indentSize: 2 });
     appRouter.addStatements(/* ts */ `
     .merge('${model.toLowerCase()}.', ${plural}Router)`);
