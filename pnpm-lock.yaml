@@ -10,7 +10,7 @@ specifiers:
   pluralize: ^8.0.0
   prisma: ^4.6.1
   prisma-trpc-shield-generator: 0.0.0-rc.4
-  prisma-zod-generator: ^0.7.4
+  prisma-zod-generator: file:./prisma-zod-generator
   trpc-shield: ^0.1.2
   ts-morph: ^16.0.0
   tslib: ^2.4.1
@@ -22,7 +22,7 @@ dependencies:
   '@prisma/internals': 4.6.1
   pluralize: 8.0.0
   prisma-trpc-shield-generator: 0.0.0-rc.4_prisma@4.6.1
-  prisma-zod-generator: 0.7.4_prisma@4.6.1
+  prisma-zod-generator: file:prisma-zod-generator_prisma@4.6.1
   ts-morph: 16.0.0
   tslib: 2.4.1
 
@@ -1344,22 +1344,6 @@ packages:
       - supports-color
     dev: false
 
-  /prisma-zod-generator/0.7.4_prisma@4.6.1:
-    resolution: {integrity: sha512-84e5hO0pdKrAWDhwwekvk+x55Ujarv0Syu3yn0I7cgKPJqfy9le9tAVGilUHEd17Ee1YtV8CaqDeO6RXo0qZEw==}
-    hasBin: true
-    dependencies:
-      '@prisma/client': 4.6.1_prisma@4.6.1
-      '@prisma/generator-helper': 4.6.1
-      '@prisma/internals': 4.6.1
-      prettier: 2.7.1
-      tslib: 2.4.1
-      zod: 3.19.1
-    transitivePeerDependencies:
-      - encoding
-      - prisma
-      - supports-color
-    dev: false
-
   /prisma/4.6.1:
     resolution: {integrity: sha512-BR4itMCuzrDV4tn3e2TF+nh1zIX/RVU0isKtKoN28ADeoJ9nYaMhiuRRkFd2TZN8+l/XfYzoRKyHzUFXLQhmBQ==}
     engines: {node: '>=14.17'}
@@ -1828,4 +1812,23 @@ packages:
 
   /zod/3.19.1:
     resolution: {integrity: sha512-LYjZsEDhCdYET9ikFu6dVPGp2YH9DegXjdJToSzD9rO6fy4qiRYFoyEYwps88OseJlPyl2NOe2iJuhEhL7IpEA==}
+    dev: false
+
+  file:prisma-zod-generator_prisma@4.6.1:
+    resolution: {directory: prisma-zod-generator, type: directory}
+    id: file:prisma-zod-generator
+    name: prisma-zod-generator
+    version: 0.7.4
+    hasBin: true
+    dependencies:
+      '@prisma/client': 4.6.1_prisma@4.6.1
+      '@prisma/generator-helper': 4.6.1
+      '@prisma/internals': 4.6.1
+      prettier: 2.7.1
+      tslib: 2.4.1
+      zod: 3.19.1
+    transitivePeerDependencies:
+      - encoding
+      - prisma
+      - supports-color
     dev: false

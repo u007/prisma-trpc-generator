@@ -1,4 +1,4 @@
-import { Project, ScriptTarget, ModuleKind, CompilerOptions } from 'ts-morph';
+import { Project, ScriptTarget, ModuleKind, CompilerOptions } from 'ts-morph'
 
 const compilerOptions: CompilerOptions = {
   target: ScriptTarget.ES2019,
@@ -6,10 +6,10 @@ const compilerOptions: CompilerOptions = {
   emitDecoratorMetadata: true,
   experimentalDecorators: true,
   esModuleInterop: true,
-};
+}
 
 export const project = new Project({
   compilerOptions: {
     ...compilerOptions,
   },
-});
+})

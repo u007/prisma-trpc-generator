@@ -1,11 +1,11 @@
-import { EnvValue, GeneratorOptions } from '@prisma/generator-helper';
-import { getDMMF, parseEnvValue } from '@prisma/internals';
-import { promises as fs } from 'fs';
-import path from 'path';
-import pluralize from 'pluralize';
-import { generate as PrismaTrpcShieldGenerator } from 'prisma-trpc-shield-generator/lib/prisma-generator';
-import { generate as PrismaZodGenerator } from 'prisma-zod-generator/lib/prisma-generator';
-import { configSchema } from './config';
+import { promises as fs } from 'fs'
+import path from 'path'
+import { EnvValue, GeneratorOptions } from '@prisma/generator-helper'
+import { getDMMF, parseEnvValue } from '@prisma/internals'
+import pluralize from 'pluralize'
+import { generate as PrismaTrpcShieldGenerator } from 'prisma-trpc-shield-generator/lib/prisma-generator'
+import { generate as PrismaZodGenerator } from 'prisma-zod-generator/lib/prisma-generator'
+import { configSchema } from './config'
 import {
   generateBaseRouter,
   generateCreateRouterImport,
@@ -15,24 +15,24 @@ import {
   generateShieldImport,
   generatetRPCImport,
   getInputTypeByOpName,
-} from './helpers';
-import { project } from './project';
-import removeDir from './utils/removeDir';
+} from './helpers'
+import { project } from './project'
+import removeDir from './utils/removeDir'
 
-export async function generate(options: GeneratorOptions) {
-  const outputDir = parseEnvValue(options.generator.output as EnvValue);
-  const results = configSchema.safeParse(options.generator.config);
-  if (!results.success) throw new Error('Invalid options passed');
-  const config = results.data;
+export async function generate (options: GeneratorOptions) {
+  const outputDir = parseEnvValue(options.generator.output as EnvValue)
+  const results = configSchema.safeParse(options.generator.config)
+  if (!results.success) { throw new Error('Invalid options passed') }
+  const config = results.data
 
-  await fs.mkdir(outputDir, { recursive: true });
-  await removeDir(outputDir, true);
+  await fs.mkdir(outputDir, { recursive: true })
+  await removeDir(outputDir, true)
+  console.log('options', options)
+  await PrismaZodGenerator(options)
 
-  await PrismaZodGenerator(options);
-
-  let shieldOutputPath: string;
+  let shieldOutputPath: string
   if (config.withShield) {
-    const outputPath = options.generator.output.value;
+    const outputPath = options.generator.output.value
     shieldOutputPath = (
       outputPath
         .split(path.sep)
@@ -40,12 +40,12 @@ export async function generate(options: GeneratorOptions) {
         .join(path.sep) + '/shield'
     )
       .split(path.sep)
-      .join(path.posix.sep);
+      .join(path.posix.sep)
 
     shieldOutputPath = path.relative(
       path.join(outputPath, 'routers', 'helpers'),
       shieldOutputPath,
-    );
+    )
 
     await PrismaTrpcShieldGenerator({
       ...options,
@@ -56,71 +56,71 @@ export async function generate(options: GeneratorOptions) {
           value: shieldOutputPath,
         },
       },
-    });
+    })
   }
 
   const prismaClientProvider = options.otherGenerators.find(
-    (it) => parseEnvValue(it.provider) === 'prisma-client-js',
-  );
+    it => parseEnvValue(it.provider) === 'prisma-client-js',
+  )
 
-  const dataSource = options.datasources?.[0];
+  const dataSource = options.datasources?.[0]
 
   const prismaClientDmmf = await getDMMF({
     datamodel: options.datamodel,
     previewFeatures: prismaClientProvider.previewFeatures,
-  });
+  })
 
   const createRouter = project.createSourceFile(
     path.resolve(outputDir, 'routers', 'helpers', 'createRouter.ts'),
     undefined,
     { overwrite: true },
-  );
+  )
 
-  generatetRPCImport(createRouter);
+  generatetRPCImport(createRouter)
   if (config.withShield) {
-    generateShieldImport(createRouter, shieldOutputPath);
+    generateShieldImport(createRouter, shieldOutputPath)
   }
-  generateBaseRouter(createRouter, config);
+  generateBaseRouter(createRouter, config)
 
   createRouter.formatText({
     indentSize: 2,
-  });
+  })
 
   const appRouter = project.createSourceFile(
-    path.resolve(outputDir, 'routers', `index.ts`),
+    path.resolve(outputDir, 'routers', 'index.ts'),
     undefined,
     { overwrite: true },
-  );
+  )
 
-  generateCreateRouterImport(appRouter, config.withMiddleware);
+  generateCreateRouterImport(appRouter, config.withMiddleware)
   appRouter.addStatements(/* ts */ `
   export const appRouter = ${
     config.withMiddleware ? 'createProtectedRouter' : 'createRouter'
-  }()`);
+  }()`)
 
   prismaClientDmmf.mappings.modelOperations.forEach((modelOperation) => {
-    const { model, ...operations } = modelOperation;
-    const plural = pluralize(model.toLowerCase());
-    const hasCreateMany = Boolean(operations.createMany);
-    generateRouterImport(appRouter, plural, model);
+    const { model, ...operations } = modelOperation
+    const plural = pluralize(model.toLowerCase())
+    const hasCreateMany = Boolean(operations.createMany)
+    generateRouterImport(appRouter, plural, model)
     const modelRouter = project.createSourceFile(
       path.resolve(outputDir, 'routers', `${model}.router.ts`),
       undefined,
       { overwrite: true },
-    );
+    )
 
-    generateCreateRouterImport(modelRouter, false);
+    generateCreateRouterImport(modelRouter, false)
     generateRouterSchemaImports(
       modelRouter,
       model,
       hasCreateMany,
       dataSource.provider,
-    );
+    )
 
     modelRouter.addStatements(/* ts */ `
-    export const ${plural}Router = router({`);
+    export const ${plural}Router = router({`)
     for (const [opType, opNameWithModel] of Object.entries(operations)) {
-      const baseOpType = opType.replace('OrThrow', '');
+      const baseOpType = opType.replace('OrThrow', '')
 
       generateProcedure(
         modelRouter,
@@ -129,15 +129,15 @@ export async function generate(options: GeneratorOptions) {
         model,
         opType,
         baseOpType,
-      );
+      )
     }
     modelRouter.addStatements(/* ts */ `
-    })`);
-    modelRouter.formatText({ indentSize: 2 });
+    })`)
+    modelRouter.formatText({ indentSize: 2 })
     appRouter.addStatements(/* ts */ `
-    .merge('${model.toLowerCase()}.', ${plural}Router)`);
-  });
+    .merge('${model.toLowerCase()}.', ${plural}Router)`)
+  })
 
-  appRouter.formatText({ indentSize: 2 });
-  await project.save();
+  appRouter.formatText({ indentSize: 2 })
+  await project.save()
 }
