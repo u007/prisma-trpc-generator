@@ -27,7 +27,6 @@ export async function generate (options: GeneratorOptions) {
 
   await fs.mkdir(outputDir, { recursive: true })
   await removeDir(outputDir, true)
-  console.log('options', options)
   await PrismaZodGenerator(options)
 
   let shieldOutputPath: string

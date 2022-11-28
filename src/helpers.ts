@@ -80,14 +80,50 @@ export function generateProcedure (
   opType: string,
   baseOpType: string,
 ) {
+  let codeBlock = ''
+
+  if (baseOpType === 'findMany') {
+    codeBlock = /* ts */ `
+      const [list, count] = await Promise.all([
+        prisma.${uncapitalizeFirstLetter(modelName)}.findMany(input),
+        prisma.${uncapitalizeFirstLetter(modelName)}.count({ where: input.where }),
+      ])
+      
+      return { list, count };
+    `
+  } else if (baseOpType === 'findUnique') {
+    codeBlock = /* ts */ `
+      if (input.where.id === 'new') {
+        return {
+          // TODO
+          siteId: ctx.user?.siteId,
+          ownerId: ctx.user?.id,
+        } as ${modelName}
+      }
+
+      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
+      return ${name};
+    `
+  } else {
+    const isCreateOrUpdate = ['create', 'update'].includes(baseOpType)
+    const isUpsert = baseOpType.includes('upsert')
+    codeBlock = /* ts */ `
+      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
+      ${isCreateOrUpdate ? 'await enforceOwnership(ctx, input.data)' : ''}
+${isUpsert ? 'await enforceOwnership(ctx, input.create)' : ''}
+${isUpsert ? '      await enforceOwnership(ctx, input.update)' : ''}
+      return ${name};
+    `
+  }
+
   sourceFile.addStatements(/* ts */ `
   '${name}': protectedProcedure.input(${typeName}).${getProcedureTypeByOpName(baseOpType)}(
     async ({ input, ctx }) => {
       if (!ctx.isAdmin) {
         throw new Error('Not allowed')
       }
-      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      return ${name};
+
+${codeBlock}
     }
 ),`)
 }
@@ -121,6 +157,7 @@ export function generateRouterSchemaImports (
     `//import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
     'import { protectedProcedure } from \'../../trpc\'',
     'import { router } from \'@/server/trpc/trpc\'',
+    'import { enforceOwnership } from \'@/server/lib/owner\'',
   ])
 
   if (provider === 'mongodb') {
