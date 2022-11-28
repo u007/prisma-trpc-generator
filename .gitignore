@@ -4,3 +4,4 @@ package
 npm-debug.log*
 prisma/generated
 prisma/shield
+node_modules
