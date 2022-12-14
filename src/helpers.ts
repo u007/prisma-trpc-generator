@@ -135,6 +135,7 @@ export function generateRouterSchemaImports (
   provider: string,
 ) {
   let statements = [
+    `import { ${name} } from '@prisma/client'`,
     `import { ${name}FindUniqueSchema } from '../schemas/findUnique${name}.schema'`,
     `import { ${name}FindFirstSchema } from '../schemas/findFirst${name}.schema'`,
     `import { ${name}FindManySchema } from '../schemas/findMany${name}.schema'`,
