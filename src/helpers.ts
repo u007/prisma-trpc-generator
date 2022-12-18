@@ -109,7 +109,26 @@ export function generateProcedure (
     const isUpsert = baseOpType.includes('upsert')
     codeBlock = /* ts */ `
       const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      ${isCreateOrUpdate ? 'await enforceSite(ctx, input.data)' : ''}
+      ${isCreateOrUpdate
+? `await enforceSite(ctx, input.data)
+      // const current = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
+      // if (!current) {
+      //   throw new Error('${modelName} not found')
+      // }
+      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findMany({
+      //   where: {
+      //     code: current.code,
+      //     siteId: current.siteId,
+      //     id: {
+      //       not: current.id,
+      //     }
+      //   }
+      // })
+      // if (exists) {
+      //   throw new Error('${modelName} code already exists')
+      // }
+      `
+: ''}
 ${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
 ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
       return ${name};
