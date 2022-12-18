@@ -109,9 +109,9 @@ export function generateProcedure (
     const isUpsert = baseOpType.includes('upsert')
     codeBlock = /* ts */ `
       const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      ${isCreateOrUpdate ? 'await enforceOwnership(ctx, input.data)' : ''}
-${isUpsert ? 'await enforceOwnership(ctx, input.create)' : ''}
-${isUpsert ? '      await enforceOwnership(ctx, input.update)' : ''}
+      ${isCreateOrUpdate ? 'await enforceSite(ctx, input.data)' : ''}
+${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
+${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
       return ${name};
     `
   }
