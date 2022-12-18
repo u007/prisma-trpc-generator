@@ -120,7 +120,9 @@ export async function generate (options: GeneratorOptions) {
     export const ${plural}Router = router({`)
     for (const [opType, opNameWithModel] of Object.entries(operations)) {
       const baseOpType = opType.replace('OrThrow', '')
-      if (baseOpType === 'groupBy') {
+      // no group by nor aggregate nor findraw, have to be manual for security
+      //  no upsert also due to unique check has to be manual
+      if (baseOpType === 'groupBy' || baseOpType.startsWith('aggregate') || baseOpType === 'findRaw' || baseOpType === 'upsertOne') {
         // skip 
         continue
       }

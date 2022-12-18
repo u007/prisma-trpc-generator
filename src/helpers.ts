@@ -105,17 +105,32 @@ export function generateProcedure (
       return ${name};
     `
   } else {
-    const isCreateOrUpdate = ['create', 'update'].includes(baseOpType)
+    const isCreate = baseOpType.startsWith('create')
+    const isUpdate = baseOpType.startsWith('update')
+    const isCreateOrUpdate = isCreate || isUpdate
     const isUpsert = baseOpType.includes('upsert')
     codeBlock = /* ts */ `
+      ${isCreate
+? `await enforceSite(ctx, input.data)
+      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
+      //   where: {
+      //     code: input.data.code,
+      //     siteId: input.data.siteId,
+      //   }
+      // })
+      // if (exists) {
+      //   throw new Error('${modelName} code already exists')
+      // }
       const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      ${isCreateOrUpdate
+      `
+ : ''}
+      ${isUpdate
 ? `await enforceSite(ctx, input.data)
       // const current = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
       // if (!current) {
       //   throw new Error('${modelName} not found')
       // }
-      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findMany({
+      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
       //   where: {
       //     code: current.code,
       //     siteId: current.siteId,
@@ -127,10 +142,12 @@ export function generateProcedure (
       // if (exists) {
       //   throw new Error('${modelName} code already exists')
       // }
+      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       `
 : ''}
 ${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
 ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
+${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);` : ''}
       return ${name};
     `
   }
@@ -138,7 +155,7 @@ ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
   sourceFile.addStatements(/* ts */ `
   '${name}': protectedProcedure.input(${typeName}).${getProcedureTypeByOpName(baseOpType)}(
     async ({ input, ctx }) => {
-      if (!ctx.isAdmin) {
+      if (!ctx.isSuperAdmin) {
         throw new Error('Not allowed')
       }
 
@@ -172,18 +189,18 @@ export function generateRouterSchemaImports (
     `import { ${name}UpdateOneSchema } from '../schemas/updateOne${name}.schema'`,
     `import { ${name}DeleteManySchema } from '../schemas/deleteMany${name}.schema'`,
     `import { ${name}UpdateManySchema } from '../schemas/updateMany${name}.schema'`,
-    `import { ${name}UpsertSchema } from '../schemas/upsertOne${name}.schema'`,
-    `import { ${name}AggregateSchema } from '../schemas/aggregate${name}.schema'`,
+    `//import { ${name}UpsertSchema } from '../schemas/upsertOne${name}.schema'`,
+    `//import { ${name}AggregateSchema } from '../schemas/aggregate${name}.schema'`,
     `//import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
     'import { protectedProcedure } from \'../../trpc\'',
     'import { router } from \'@/server/trpc/trpc\'',
-    'import { enforceOwnership } from \'@/server/lib/owner\'',
+    'import { enforceSite } from \'@/server/lib/owner\'',
   ])
 
   if (provider === 'mongodb') {
     statements = statements.concat([
-      `import { ${name}FindRawObjectSchema } from '../schemas/objects/${name}FindRaw.schema'`,
-      `import { ${name}AggregateRawObjectSchema } from '../schemas/objects/${name}AggregateRaw.schema'`,
+      `//import { ${name}FindRawObjectSchema } from '../schemas/objects/${name}FindRaw.schema'`,
+      `//import { ${name}AggregateRawObjectSchema } from '../schemas/objects/${name}AggregateRaw.schema'`,
     ])
   }
 
