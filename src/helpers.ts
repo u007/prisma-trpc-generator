@@ -126,21 +126,29 @@ export function generateProcedure (
  : ''}
       ${isUpdate
 ? `await enforceSite(ctx, input.data)
-      // const current = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
-      // if (!current) {
-      //   throw new Error('${modelName} not found')
-      // }
-      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
-      //   where: {
-      //     code: current.code,
-      //     siteId: current.siteId,
-      //     id: {
-      //       not: current.id,
+      // const newCode = !!input.data?.code && typeof input.data.code === 'string'
+      //   ? input.data.code 
+      //   : (!!input.data.code && typeof input.data.code === 'object' && 'set' in input.data.code ? input.data.code.set : undefined)
+      // if (typeof newCode !== 'undefined') {
+      //   const current = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
+      //   if (!current) {
+      //     throw new Error('${modelName} not found')
+      //   }
+      //   if (newCode !== current.code) {
+      //     const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
+      //       where: {
+      //         code: newCode,
+      //         siteId: current.siteId,
+      //         id: {
+      //           not: current.id,
+      //         }
+      //       }
+      //     })
+      //     if (exists) {
+      //       console.log('exists', exists)
+      //       throw new Error('${modelName} code already exists')
       //     }
       //   }
-      // })
-      // if (exists) {
-      //   throw new Error('${modelName} code already exists')
       // }
       const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       `
