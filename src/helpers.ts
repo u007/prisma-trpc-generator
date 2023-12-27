@@ -112,7 +112,7 @@ export function generateProcedure (
         } as ${modelName}
       }
 
-      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
+      const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       return filterResult(ctx, ${name});
     `
   } else {
@@ -123,7 +123,7 @@ export function generateProcedure (
     codeBlock = /* ts */ `
       ${isCreate
 ? `await enforceSite(ctx, input.data)
-      // const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
+      // const exists = await prisma().${uncapitalizeFirstLetter(modelName)}.findFirst({
       //   where: {
       //     code: input.data.code,
       //     siteId: input.data.siteId,
@@ -132,7 +132,7 @@ export function generateProcedure (
       // if (exists) {
       //   throw new Error('${modelName} code already exists')
       // }
-      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
+      const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       `
  : ''}
       ${isUpdate
@@ -141,12 +141,12 @@ export function generateProcedure (
       //   ? input.data.code 
       //   : (!!input.data.code && typeof input.data.code === 'object' && 'set' in input.data.code ? input.data.code.set : undefined)
       // if (typeof newCode !== 'undefined') {
-      //   const current = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
+      //   const current = await prisma().${uncapitalizeFirstLetter(modelName)}.findFirst({ where: input.where })
       //   if (!current) {
       //     throw new Error('${modelName} not found')
       //   }
       //   if (newCode !== current.code) {
-      //     const exists = await prisma.${uncapitalizeFirstLetter(modelName)}.findFirst({
+      //     const exists = await prisma().${uncapitalizeFirstLetter(modelName)}.findFirst({
       //       where: {
       //         code: newCode,
       //         siteId: current.siteId,
@@ -161,12 +161,12 @@ export function generateProcedure (
       //     }
       //   }
       // }
-      const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
+      const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
       `
 : ''}
 ${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
 ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
-${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);` : ''}
+${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);` : ''}
       return filterResult(ctx, ${name});
     `
   }
@@ -212,6 +212,7 @@ export function generateRouterSchemaImports (
     `//import { ${name}AggregateSchema } from '../schemas/aggregate${name}.schema'`,
     `//import { ${name}GroupBySchema } from '../schemas/groupBy${name}.schema'`,
     'import { protectedProcedure } from \'../../trpc\'',
+    'import { filterResult, filterResults } from \'./filter\'',
     'import { router } from \'@/server/trpc/trpc\'',
     'import { enforceSite } from \'@/server/lib/owner\'',
   ])
