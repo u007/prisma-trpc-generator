@@ -84,10 +84,21 @@ export function generateProcedure (
 
   if (baseOpType === 'findMany') {
     codeBlock = /* ts */ `
-      const [list, count] = await Promise.all([
-        prisma.${uncapitalizeFirstLetter(modelName)}.findMany(input),
-        prisma.${uncapitalizeFirstLetter(modelName)}.count({ where: input.where }),
+      const where = (() => {
+        if (ctx.isSuperAdmin) {
+          return input.where
+        }
+        return {
+          ...input.where,
+          siteId: ctx.user?.siteId,
+        }
+      })()
+      const [rawList, count] = await Promise.all([
+        prisma().${uncapitalizeFirstLetter(modelName)}.findMany({ ...input, where }),
+        prisma().${uncapitalizeFirstLetter(modelName)}.count({ where }),
       ])
+
+      const list = filterResults(ctx, rawList)
       
       return { list, count };
     `
@@ -102,7 +113,7 @@ export function generateProcedure (
       }
 
       const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      return ${name};
+      return filterResult(ctx, ${name});
     `
   } else {
     const isCreate = baseOpType.startsWith('create')
@@ -156,7 +167,7 @@ export function generateProcedure (
 ${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
 ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
 ${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma.${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);` : ''}
-      return ${name};
+      return filterResult(ctx, ${name});
     `
   }
 
