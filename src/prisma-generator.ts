@@ -116,6 +116,11 @@ export async function generate (options: GeneratorOptions) {
       dataSource.provider,
     )
 
+    modelRouter.addStatements(`
+const defaultValue = {
+  // TODO
+}`)
+
     modelRouter.addStatements(/* ts */ `
     export const ${plural}Router = router({`)
     for (const [opType, opNameWithModel] of Object.entries(operations)) {

@@ -106,7 +106,7 @@ export function generateProcedure (
     codeBlock = /* ts */ `
       if (input.where.id === 'new') {
         return {
-          // TODO
+          ...defaultValue,
           siteId: ctx.user?.siteId,
           ownerId: ctx.user?.id,
         } as ${modelName}
