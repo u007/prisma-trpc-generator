@@ -98,7 +98,7 @@ export function generateProcedure (
         prisma().${uncapitalizeFirstLetter(modelName)}.count({ where }),
       ])
 
-      const list = filterResults(ctx, rawList)
+      const list = filterResults(ctx, rawList, [${modelName}])
       
       return { list, count };
     `
@@ -113,7 +113,7 @@ export function generateProcedure (
       }
 
       const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);
-      return filterResult(ctx, ${name});
+      return filterResult(ctx, ${name}, [${modelName}]);
     `
   } else {
     const isCreate = baseOpType.startsWith('create')
@@ -167,7 +167,7 @@ export function generateProcedure (
 ${isUpsert ? 'await enforceSite(ctx, input.create)' : ''}
 ${isUpsert ? '      await enforceSite(ctx, input.update)' : ''}
 ${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma().${uncapitalizeFirstLetter(modelName)}.${opType.replace('One', '')}(input);` : ''}
-      return filterResult(ctx, ${name});
+      return filterResult(ctx, ${name}, [${modelName}]);
     `
   }
 
