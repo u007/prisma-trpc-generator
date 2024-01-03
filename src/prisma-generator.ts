@@ -117,7 +117,7 @@ export async function generate (options: GeneratorOptions) {
     )
 
     modelRouter.addStatements(`
-const defaultValue = {
+const defaultValue: : Partial<${model}> = {
   // TODO
 }`)
 
