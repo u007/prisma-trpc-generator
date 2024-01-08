@@ -105,10 +105,22 @@ export function generateProcedure (
   } else if (baseOpType === 'findUnique') {
     codeBlock = /* ts */ `
       if (input.where.id === 'new') {
+        const cloneId = input.cloneId
+        const clone = cloneId
+          ? await prisma().${uncapitalizeFirstLetter(modelName)}.findFirst({
+            where: {
+              ...(!ctx.isSuperAdmin ? { siteId: ctx.user?.siteId, ownerId: ctx.user?.id } : {}),
+              id: cloneId,
+            } 
+          })
+          : null
+
         return {
           ...defaultValue,
           siteId: ctx.user?.siteId,
           ownerId: ctx.user?.id,
+          ...clone,
+          ...(!ctx.isSuperAdmin ? { siteId: ctx.user?.siteId, ownerId: ctx.user?.id } : {}),
         } as ${modelName}
       }
 
@@ -171,8 +183,18 @@ ${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma().${uncapitaliz
     `
   }
 
+  const inputSchema = (() => {
+    if (baseOpType.includes('findUnique')) {
+      return `z.object({
+    ...${typeName}.shape,
+    cloneId: z.string().optional(),
+  })`
+    }
+    return typeName
+  })()
+
   sourceFile.addStatements(/* ts */ `
-  '${name}': protectedProcedure.input(${typeName}).${getProcedureTypeByOpName(baseOpType)}(
+  '${name}': protectedProcedure.input(${inputSchema}).${getProcedureTypeByOpName(baseOpType)}(
     async ({ input, ctx }) => {
       if (!ctx.isSuperAdmin) {
         throw new Error('Not allowed')
@@ -204,6 +226,7 @@ export function generateRouterSchemaImports (
   }
 
   statements = statements.concat([
+    'import { z } from \'zod\'',
     `import { ${name}DeleteOneSchema } from '../schemas/deleteOne${name}.schema'`,
     `import { ${name}UpdateOneSchema } from '../schemas/updateOne${name}.schema'`,
     `import { ${name}DeleteManySchema } from '../schemas/deleteMany${name}.schema'`,
