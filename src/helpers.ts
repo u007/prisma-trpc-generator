@@ -196,7 +196,7 @@ ${!isCreateOrUpdate && !isUpsert ? `const ${name} = await prisma().${uncapitaliz
   sourceFile.addStatements(/* ts */ `
   '${name}': protectedProcedure.input(${inputSchema}).${getProcedureTypeByOpName(baseOpType)}(
     async ({ input, ctx }) => {
-      if (!ctx.isSuperAdmin) {
+      if (!ctx.isSuperAdmin && !ctx.isAdmin) {
         throw new Error('Not allowed')
       }
 
